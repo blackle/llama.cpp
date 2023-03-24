@@ -1019,7 +1019,8 @@ static llama_vocab::id llama_sample_top_p_top_k(
         int top_k,
         double top_p,
         double temp,
-        double repeat_penalty) {
+        double repeat_penalty,
+        double* out_prob) {
     auto & rng = lctx.rng;
 
     const auto & vocab = lctx.vocab;
@@ -1098,6 +1099,7 @@ static llama_vocab::id llama_sample_top_p_top_k(
     std::discrete_distribution<> dist(probs.begin(), probs.end());
     int idx = dist(rng);
 
+    *out_prob = probs[idx];
     return logits_id[idx].second;
 }
 
@@ -1505,7 +1507,8 @@ llama_token llama_sample_top_p_top_k(
                     int   top_k,
                  double   top_p,
                  double   temp,
-                 double   repeat_penalty) {
+                 double   repeat_penalty,
+                 double*  out_prob) {
     const int64_t t_start_sample_us = ggml_time_us();
 
     llama_token result = 0;
@@ -1519,7 +1522,8 @@ llama_token llama_sample_top_p_top_k(
             top_k,
             top_p,
             temp,
-            repeat_penalty);
+            repeat_penalty,
+            out_prob);
 
     ctx->t_sample_us += ggml_time_us() - t_start_sample_us;
     ctx->n_sample++;

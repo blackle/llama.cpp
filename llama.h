@@ -123,7 +123,8 @@ extern "C" {
                         int   top_k,
                      double   top_p,
                      double   temp,
-                     double   repeat_penalty);
+                     double   repeat_penalty,
+                     double*  out_prob);
 
     // Performance information
     LLAMA_API void llama_print_timings(struct llama_context * ctx);

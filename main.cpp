@@ -154,6 +154,15 @@ void sigint_handler(int signo) {
 }
 #endif
 
+void print_color_for_prob(double prob) {
+    int p = prob*0xFF;
+    printf("\x1b[48;2;%d;%d;%dm", 0xFF-p, (0xFF-p)/10 + 10, p/10);
+}
+
+void print_color_reset() {
+    printf("\x1b[0m");
+}
+
 int main(int argc, char ** argv) {
     // has to be called once at the start of the program to init ggml stuff
     ggml_time_init();
@@ -335,6 +344,7 @@ int main(int argc, char ** argv) {
 
         n_past += embd.size();
         embd.clear();
+        double prob = 0.0;
 
         if ((int) embd_inp.size() <= input_consumed) {
             // out of user input, sample next token
@@ -356,7 +366,7 @@ int main(int argc, char ** argv) {
                     logits[llama_token_eos()] = 0;
                 }
 
-                id = llama_sample_top_p_top_k(ctx, last_n_tokens.data(), last_n_tokens.size(), top_k, top_p, temp, repeat_penalty);
+                id = llama_sample_top_p_top_k(ctx, last_n_tokens.data(), last_n_tokens.size(), top_k, top_p, temp, repeat_penalty, &prob);
 
                 last_n_tokens.erase(last_n_tokens.begin());
                 last_n_tokens.push_back(id);
@@ -393,6 +403,7 @@ int main(int argc, char ** argv) {
             }
         }
 
+        print_color_for_prob(prob);
         // display text
         if (!input_noecho) {
             for (auto id : embd) {
@@ -400,6 +411,7 @@ int main(int argc, char ** argv) {
             }
             fflush(stdout);
         }
+        print_color_reset();
         // reset color to default if we there is no pending user input
         if (!input_noecho && (int)embd_inp.size() == input_consumed) {
             set_console_state(CONSOLE_STATE_DEFAULT);
